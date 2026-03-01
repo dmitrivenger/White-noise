@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  android-builder:
+    build: .
+    volumes:
+      - ./app/build/outputs:/output
+    container_name: whitenoise_builder

@@ -21,18 +21,35 @@ A lightweight Android application designed to help people fall asleep with custo
 
 ## Building the APK
 
-### Prerequisites
-- JDK 17+
-- Android SDK (API 34)
-- Gradle 8.0+
+### Quick Build Options
 
-### Quick Build
+#### Option 1: Docker (Easiest - No setup required!)
+```bash
+docker-compose up --build
+# APK will be in app/build/outputs/apk/
+```
+
+#### Option 2: Build Locally
 ```bash
 cd /path/to/White-noise
+chmod +x build_apk.sh
+./build_apk.sh
+```
+
+Or manually:
+```bash
 ./gradlew clean assembleRelease
 ```
 
 The APK will be generated at: `app/build/outputs/apk/release/app-release-unsigned.apk`
+
+### Prerequisites (for local builds)
+- JDK 17+ ([Download](https://jdk.java.net/))
+- Android SDK 34 (Install via Android Studio)
+- Gradle 8.0+ (or use included wrapper)
+
+### Detailed Instructions
+See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for complete platform-specific setup guides.
 
 ### Sign the APK (for Play Store)
 ```bash
