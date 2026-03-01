@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background">#0D1B2A</color>
+    <color name="surface">#162032</color>
+    <color name="accent">#4A90D9</color>
+    <color name="accent_light">#6AAEE8</color>
+    <color name="text_primary">#E8F4FD</color>
+    <color name="text_secondary">#8BAFC8</color>
+    <color name="slider_thumb">#4A90D9</color>
+    <color name="slider_track">#2A4A6A</color>
+    <color name="button_bg">#1E3A5F</color>
+    <color name="button_active">#4A90D9</color>
+    <color name="white">#FFFFFF</color>
+</resources>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">White Noise</string>
+    <string name="play">Play</string>
+    <string name="stop">Stop</string>
+    <string name="volume">Volume</string>
+    <string name="pitch">Pitch</string>
+    <string name="sleep_timer">Sleep Timer</string>
+    <string name="timer_off">Timer: Off</string>
+    <string name="notification_channel_name">White Noise Playback</string>
+    <string name="notification_title">White Noise</string>
+    <string name="notification_text">Playing white noise…</string>
+</resources>
