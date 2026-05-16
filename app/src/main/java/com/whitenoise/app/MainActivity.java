@@ -3,6 +3,7 @@ package com.whitenoise.app;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.splashscreen.SplashScreen;
 
 import android.Manifest;
 import android.content.ComponentName;
@@ -70,6 +71,7 @@ public class MainActivity extends AppCompatActivity implements TimerManager.Time
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
