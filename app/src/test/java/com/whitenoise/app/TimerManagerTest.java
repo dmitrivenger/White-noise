@@ -11,8 +11,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLooper;
+
+import android.os.Looper;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -97,7 +100,7 @@ public class TimerManagerTest {
     public void timerTick_callbackFiredEachSecond() {
         timerManager.setTimer(1);
         timerManager.start();
-        ShadowLooper.idleFor(Duration.ofSeconds(3));
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(3));
         assertTrue("Expected at least 3 ticks, got " + ticks.size(), ticks.size() >= 3);
     }
 
@@ -105,7 +108,7 @@ public class TimerManagerTest {
     public void timerTick_valuesDecreaseByOne() {
         timerManager.setTimer(1);
         timerManager.start();
-        ShadowLooper.idleFor(Duration.ofSeconds(5));
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(5));
         for (int i = 0; i < ticks.size() - 1; i++) {
             assertEquals(ticks.get(i) - 1, (int) ticks.get(i + 1));
         }
@@ -115,7 +118,7 @@ public class TimerManagerTest {
     public void timerFinish_calledWhenTimeRunsOut() {
         timerManager.setTimer(1);
         timerManager.start();
-        ShadowLooper.idleFor(Duration.ofSeconds(61));
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(61));
         assertEquals(1, finishCount);
         assertFalse(timerManager.isRunning());
     }
@@ -124,7 +127,7 @@ public class TimerManagerTest {
     public void timerFinish_calledExactlyOnce() {
         timerManager.setTimer(1);
         timerManager.start();
-        ShadowLooper.idleFor(Duration.ofSeconds(120));
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(120));
         assertEquals(1, finishCount);
     }
 
@@ -141,7 +144,7 @@ public class TimerManagerTest {
     public void stopAfterFinish_doesNotThrow() {
         timerManager.setTimer(1);
         timerManager.start();
-        ShadowLooper.idleFor(Duration.ofSeconds(61));
+        Shadows.shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(61));
         timerManager.stop(); // should be a no-op, not throw
     }
 }
