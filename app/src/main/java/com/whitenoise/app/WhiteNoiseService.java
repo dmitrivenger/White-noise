@@ -5,10 +5,12 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
@@ -19,6 +21,7 @@ public class WhiteNoiseService extends Service {
     private static final int NOTIFICATION_ID = 1;
 
     private AudioGenerator audioGenerator;
+    private PowerManager.WakeLock wakeLock;
     private final IBinder binder = new LocalBinder();
 
     public class LocalBinder extends Binder {
@@ -32,6 +35,8 @@ public class WhiteNoiseService extends Service {
         super.onCreate();
         audioGenerator = new AudioGenerator();
         createNotificationChannel();
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WhiteNoise::AudioWakeLock");
         Log.d(TAG, "Service created");
     }
 
@@ -49,6 +54,9 @@ public class WhiteNoiseService extends Service {
         if (audioGenerator != null) {
             audioGenerator.start();
             startForeground(NOTIFICATION_ID, buildNotification());
+            if (!wakeLock.isHeld()) {
+                wakeLock.acquire();
+            }
             Log.d(TAG, "Audio started");
         }
     }
@@ -57,6 +65,9 @@ public class WhiteNoiseService extends Service {
         if (audioGenerator != null) {
             audioGenerator.stop();
             stopForeground(true);
+            if (wakeLock.isHeld()) {
+                wakeLock.release();
+            }
             Log.d(TAG, "Audio stopped");
         }
     }
@@ -83,6 +94,9 @@ public class WhiteNoiseService extends Service {
         if (audioGenerator != null) {
             audioGenerator.release();
             audioGenerator = null;
+        }
+        if (wakeLock != null && wakeLock.isHeld()) {
+            wakeLock.release();
         }
         Log.d(TAG, "Service destroyed");
     }
