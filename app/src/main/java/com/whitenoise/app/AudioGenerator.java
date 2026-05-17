@@ -34,7 +34,7 @@ public class AudioGenerator {
         audioTrack = new AudioTrack.Builder()
                 .setAudioAttributes(new AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                         .build())
                 .setAudioFormat(new AudioFormat.Builder()
                         .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
@@ -112,12 +112,19 @@ public class AudioGenerator {
 
                 int written = audioTrack.write(buffer, 0, BUFFER_SIZE, AudioTrack.WRITE_BLOCKING);
                 if (written < 0) {
-                    Log.e(TAG, "Error writing audio data: " + written);
-                    break;
+                    Log.w(TAG, "Audio write error: " + written + " — retrying");
+                    try { Thread.sleep(50); } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
                 }
             } catch (Exception e) {
-                Log.e(TAG, "Error in audio generation thread", e);
-                break;
+                Log.w(TAG, "Audio generation error — retrying", e);
+                if (!isRunning) break;
+                try { Thread.sleep(50); } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
             }
         }
     }

@@ -7,6 +7,9 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
+import android.media.AudioManager;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
@@ -22,6 +25,9 @@ public class WhiteNoiseService extends Service {
 
     private AudioGenerator audioGenerator;
     private PowerManager.WakeLock wakeLock;
+    private AudioManager audioManager;
+    private AudioFocusRequest audioFocusRequest;
+    private AudioManager.OnAudioFocusChangeListener focusChangeListener;
     private final IBinder binder = new LocalBinder();
 
     public class LocalBinder extends Binder {
@@ -37,6 +43,9 @@ public class WhiteNoiseService extends Service {
         createNotificationChannel();
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WhiteNoise::AudioWakeLock");
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        // For a sleep app we keep playing through transient focus losses (phone call will still preempt via system)
+        focusChangeListener = focusChange -> Log.d(TAG, "Audio focus change: " + focusChange);
         Log.d(TAG, "Service created");
     }
 
@@ -52,6 +61,7 @@ public class WhiteNoiseService extends Service {
 
     public void startAudio() {
         if (audioGenerator != null) {
+            requestAudioFocus();
             audioGenerator.start();
             startForeground(NOTIFICATION_ID, buildNotification());
             if (!wakeLock.isHeld()) {
@@ -64,11 +74,41 @@ public class WhiteNoiseService extends Service {
     public void stopAudio() {
         if (audioGenerator != null) {
             audioGenerator.stop();
-            stopForeground(true);
+            releaseAudioFocus();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                stopForeground(STOP_FOREGROUND_REMOVE);
+            } else {
+                stopForeground(true);
+            }
             if (wakeLock.isHeld()) {
                 wakeLock.release();
             }
             Log.d(TAG, "Audio stopped");
+        }
+    }
+
+    private void requestAudioFocus() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            audioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                    .setAudioAttributes(new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build())
+                    .setOnAudioFocusChangeListener(focusChangeListener)
+                    .setWillPauseWhenDucked(false)
+                    .build();
+            audioManager.requestAudioFocus(audioFocusRequest);
+        } else {
+            audioManager.requestAudioFocus(focusChangeListener, AudioManager.STREAM_MUSIC,
+                    AudioManager.AUDIOFOCUS_GAIN);
+        }
+    }
+
+    private void releaseAudioFocus() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && audioFocusRequest != null) {
+            audioManager.abandonAudioFocusRequest(audioFocusRequest);
+        } else {
+            audioManager.abandonAudioFocus(focusChangeListener);
         }
     }
 
@@ -86,6 +126,12 @@ public class WhiteNoiseService extends Service {
 
     public boolean isPlaying() {
         return audioGenerator != null && audioGenerator.isPlaying();
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        // Re-start ourselves so audio survives the user swiping the app out of recents
+        startService(new Intent(this, WhiteNoiseService.class));
     }
 
     @Override
