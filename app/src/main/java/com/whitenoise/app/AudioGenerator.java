@@ -111,7 +111,13 @@ public class AudioGenerator {
                 }
 
                 int written = audioTrack.write(buffer, 0, BUFFER_SIZE, AudioTrack.WRITE_BLOCKING);
-                if (written < 0) {
+                if (written == AudioTrack.ERROR_DEAD_OBJECT) {
+                    Log.w(TAG, "AudioTrack dead (screen-off?) — reinitializing");
+                    try { audioTrack.release(); } catch (Exception ignored) {}
+                    initializeAudioTrack();
+                    audioTrack.play();
+                    audioTrack.setVolume(volume);
+                } else if (written < 0) {
                     Log.w(TAG, "Audio write error: " + written + " — retrying");
                     try { Thread.sleep(50); } catch (InterruptedException ie) {
                         Thread.currentThread().interrupt();
